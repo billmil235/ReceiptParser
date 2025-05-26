@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReceiptManager.Api", "ReceiptManager.Api\ReceiptManager.Api.csproj", "{039CC9E4-BBBB-4374-A1CB-BBC737D10EA1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D98568DC-A761-48BE-B219-08E2722CF797}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{039CC9E4-BBBB-4374-A1CB-BBC737D10EA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{039CC9E4-BBBB-4374-A1CB-BBC737D10EA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{039CC9E4-BBBB-4374-A1CB-BBC737D10EA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{039CC9E4-BBBB-4374-A1CB-BBC737D10EA1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

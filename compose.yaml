@@ -1,0 +1,7 @@
+﻿services:
+  receiptmanager.api:
+    image: receiptmanager.api
+    build:
+      context: .
+      dockerfile: ReceiptManager.Api/Dockerfile
+

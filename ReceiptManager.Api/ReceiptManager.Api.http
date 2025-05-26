@@ -1,0 +1,6 @@
+@ReceiptManager.Api_HostAddress = http://localhost:5129
+
+GET {{ReceiptManager.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
