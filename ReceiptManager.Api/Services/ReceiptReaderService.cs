@@ -22,44 +22,50 @@ public class ReceiptReaderService
     private const string ReceiptPrompt = """
                                          Attached is an image of a cash register receipt.
                                          
-                                         Typically, the merchant name and address will be at the top of the receipt.  Not all receipts will have an address.  If their is no merchant address, mark the line as NULL.
-                                         If the receipt does have a merchant address, not all addresses will have a second address line so mark that as NULL if it does not exist.
-                                         The receipt may contain a phone number.  If it does not, mark as null.  The phone number will typically be near the address or merchant name.
+                                         Typically, the merchant name and address will be at the top of the receipt.  Not all receipts will have an address.  If there is no merchant address, assign NULL to the address field.  The merchant address may not have a second address line.  If it does not, assign NULL to that field.
+                                         
+                                         The receipt may contain a phone number.  The phone number will typically be near the address or merchant name.  If it does not, assign null to that field.
                                          
                                          Towards the middle of the receipt there may be line item information.  Each line will contain an item description, some blank space and a price.
                                          Not all receipts will have line items.  If the receipt does not contain line items initialize that section to an empty array.
                                          
-                                         Payment transaction details will be found towards the bottom of the receipt.  Transaction types will be either cash or credit card.  
-                                         Each credit card transaction will contain a credit card type, last 4 digits of the account number, the transaction amount and a transaction date with time.
-                                         The credit card type will be one of the following: visa, american express, mastercard, discover, or gift card.
-                                         The account number will be located bear the credit card type.  It may take the form XXXXXXXXXXXX1234 or *1234.
-
+                                         Payment transaction details will be found towards the bottom of the receipt.  There can be 1 or more payment transactions.  Transaction types will be either cash or electronic, typically a credit or debit card.  
+                                         
+                                         Each electronic transaction will contain a the following information close together.
+                                         	- Credit card type
+                                         	- Transaction Amount
+                                         	- Transaction date and time.
+                                         	- The last 4 digits of the account number.
+                                         
+                                         The credit card type will be one of the following: visa, american express, mastercard, discover, or a gift card.
+                                         The account number will be located near the credit card type.  It may take the form XXXXXXXXXXXX1234 or *1234.  It will not be prefixed with RX.
+                                         
                                          Each cash transaction will contain an amount and a date.
                                          
                                          Extract this information into JSON formatted text.  The JSON should take the following form.
                                          
                                          [{
-                                         	"MerchantName": string,
-                                         	"Address": {
-                                         		"AddressLine1": string,
-                                         		"AddressLine2": string | null,
-                                         		"City": string,
-                                         		"State": string,
-                                         		"PostalCode": string
-                                         	} | null,
-                                         	"PhoneNumber": string | null,
-                                         	"LineItems": [ {
-                                         		"ItemDescription": string,
-                                         		"ItemPrice": double,
-                                         	}] | [],
-                                         	"TransactionDetails": [{
-                                         		"CreditCardType": string,
-                                         		"Last4": string,
-                                         		"Amount": double,
-                                         		"TransactionDateTime": datetime
-                                         	}],
-                                         	"TaxAmount": double | null,
-                                         	"ReceiptTotal": double | null,
+                                             "MerchantName": string,
+                                             "Address": {
+                                                "AddressLine1": string,
+                                                "AddressLine2": string | null,
+                                                "City": string,
+                                                "State": string,
+                                                "PostalCode": string
+                                             } | null,
+                                             "PhoneNumber": string | null,
+                                             "LineItems": [ {
+                                                "ItemDescription": string,
+                                                "ItemPrice": double,
+                                             }] | [],
+                                             "TransactionDetails": [{
+                                                "CreditCardType": string,
+                                                "Last4": string,
+                                                "Amount": double,
+                                                "TransactionDateTime": datetime
+                                             }],
+                                             "TaxAmount": double | null,
+                                             "ReceiptTotal": double | null,
                                          }]
                                          """;
     
