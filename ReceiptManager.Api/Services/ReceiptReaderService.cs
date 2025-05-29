@@ -9,40 +9,26 @@ namespace ReceiptManager.Api.Services;
 
 public class ReceiptReaderService
 {
-	private readonly JsonSerializerOptions _jSonConverterOptions;
-	
-	public ReceiptReaderService()
-	{
-		_jSonConverterOptions = new JsonSerializerOptions()
-		{
-			Converters = { new CustomDateTimeConverter() }
-		};
-	}
-	
     private const string ReceiptPrompt = """
                                          Attached is an image of a cash register receipt.
                                          
-                                         Typically, the merchant name and address will be at the top of the receipt.  Not all receipts will have an address.  If there is no merchant address, assign NULL to the address field.  The merchant address may not have a second address line.  If it does not, assign NULL to that field.
+                                         Extract the merchant name and address from the receipt.
                                          
-                                         The receipt may contain a phone number.  The phone number will typically be near the address or merchant name.  If it does not, assign null to that field.
+                                         If available extract any line items from the receipt.  A line item consists of a description and a price.
                                          
-                                         Towards the middle of the receipt there may be line item information.  Each line will contain an item description, some blank space and a price.
-                                         Not all receipts will have line items.  If the receipt does not contain line items initialize that section to an empty array.
+                                         Extract the payment transaction information.  A receipt can have multiple payment types.
                                          
-                                         Payment transaction details will be found towards the bottom of the receipt.  There can be 1 or more payment transactions.  Transaction types will be either cash or electronic, typically a credit or debit card.  
+                                         A credit card, debit card or gift card transaction will have  the following information. 
+                                         	- credit card type (visa, american express, mastercard, discover, or a gift card)
+                                         	- the last 4 digits of the account number (Maybe donated similar to X#### or *####)
+                                         	- transaction amount
+                                         	- the date and time the transaction occurred.
                                          
-                                         Each electronic transaction will contain a the following information close together.
-                                         	- Credit card type
-                                         	- Transaction Amount
-                                         	- Transaction date and time.
-                                         	- The last 4 digits of the account number.
-                                         
-                                         The credit card type will be one of the following: visa, american express, mastercard, discover, or a gift card.
-                                         The account number will be located near the credit card type.  It may take the form XXXXXXXXXXXX1234 or *1234.  It will not be prefixed with RX.
+                                         A cash transaction just has an amount.
                                          
                                          Each cash transaction will contain an amount and a date.
                                          
-                                         Extract this information into JSON formatted text.  The JSON should take the following form.
+                                         Only provide a RFC8259 compliant JSON response following this format without deviation.
                                          
                                          [{
                                              "MerchantName": string,
@@ -76,22 +62,20 @@ public class ReceiptReaderService
         return TypedResults.Ok(receiptInformation);
     }
 
-    private async Task<Receipt?> ParseReceipt(Stream file, string contentType)
+    private static async Task<Receipt?> ParseReceipt(Stream file, string contentType)
     {
 	    const string endpoint = "http://192.168.1.118:11434/";
-	    const string modelName = "granite3.2-vision:2b-fp16";
+	    const string modelName = "qwen2.5vl:7b";
 
 	    using IChatClient client = new OllamaChatClient(endpoint, modelName);
 	    using var ms = new MemoryStream();
 	    await file.CopyToAsync(ms);
 
-	    var message = new ChatMessage(ChatRole.User, ReceiptPrompt);
+	    var message = new ChatMessage(ChatRole.System, ReceiptPrompt);
 	    message.Contents.Add(new DataContent(ms.ToArray(), contentType));
-
-	    var results = await client.GetResponseAsync(message);
-
-	    using var responseStream = new MemoryStream(Encoding.UTF8.GetBytes(results.Text));
 	    
-	    return await JsonSerializer.DeserializeAsync<Receipt>(responseStream, _jSonConverterOptions);
+	    var result = await client.GetResponseAsync<Receipt>(message);
+	    
+	    return result.Result;
     }
 }
