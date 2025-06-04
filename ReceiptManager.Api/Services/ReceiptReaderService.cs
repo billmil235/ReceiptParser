@@ -67,14 +67,23 @@ public class ReceiptReaderService
 	    const string endpoint = "http://192.168.1.118:11434/";
 	    const string modelName = "qwen2.5vl:7b";
 
-	    using IChatClient client = new OllamaChatClient(endpoint, modelName);
+	    var options = new ChatOptions()
+	    {
+		    TopK = 40,
+		    TopP = 0.9f,
+		    Temperature = 0.8f,
+		    FrequencyPenalty = 1.1f,
+		    PresencePenalty = 0
+	    };
+	    
 	    using var ms = new MemoryStream();
 	    await file.CopyToAsync(ms);
-
-	    var message = new ChatMessage(ChatRole.System, ReceiptPrompt);
-	    message.Contents.Add(new DataContent(ms.ToArray(), contentType));
 	    
-	    var result = await client.GetResponseAsync<Receipt>(message);
+	    var message = new ChatMessage(ChatRole.User, ReceiptPrompt);
+	    message.Contents.Add(new DataContent(ms.ToArray(), contentType));
+
+	    using IChatClient client = new OllamaChatClient(endpoint, modelName);
+	    var result = await client.GetResponseAsync<Receipt>(message, options);
 	    
 	    return result.Result;
     }
