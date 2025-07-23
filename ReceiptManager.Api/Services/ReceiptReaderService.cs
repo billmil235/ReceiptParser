@@ -7,7 +7,7 @@ using ReceiptManager.Api.Models;
 
 namespace ReceiptManager.Api.Services;
 
-public class ReceiptReaderService
+public class ReceiptReaderService(IChatClient chatClient)
 {
     private const string ReceiptPrompt = """
                                          Attached is an image of a cash register receipt.
@@ -58,15 +58,16 @@ public class ReceiptReaderService
     public async Task<Results<Ok<Receipt>, InternalServerError>> PersistUploadedFile(IFormFile file)
     {
 	    var fileId = Guid.NewGuid();
-        var receiptInformation = await ParseReceipt(file.OpenReadStream(), file.ContentType);
+	    
+	    using var memoryStream = new MemoryStream();
+	    await file.CopyToAsync(memoryStream);
+	    
+        var receiptInformation = await ParseReceipt(memoryStream, file.ContentType);
         return TypedResults.Ok(receiptInformation);
     }
 
-    private static async Task<Receipt?> ParseReceipt(Stream file, string contentType)
+    private async Task<Receipt?> ParseReceipt(MemoryStream file, string contentType)
     {
-	    const string endpoint = "http://192.168.1.118:11434/";
-	    const string modelName = "qwen2.5vl:7b";
-
 	    var options = new ChatOptions()
 	    {
 		    TopK = 40,
@@ -76,14 +77,15 @@ public class ReceiptReaderService
 		    PresencePenalty = 0
 	    };
 	    
-	    using var ms = new MemoryStream();
-	    await file.CopyToAsync(ms);
-	    
 	    var message = new ChatMessage(ChatRole.User, ReceiptPrompt);
-	    message.Contents.Add(new DataContent(ms.ToArray(), contentType));
-
-	    using IChatClient client = new OllamaChatClient(endpoint, modelName);
-	    var result = await client.GetResponseAsync<Receipt>(message, options);
+	    
+	    if (file.TryGetBuffer(out var bufferSegment))
+	    {
+		    var readOnlyMemory = new ReadOnlyMemory<byte>(bufferSegment.Array, bufferSegment.Offset, bufferSegment.Count);
+		    message.Contents.Add(new DataContent(readOnlyMemory, contentType));
+	    }
+		    
+	    var result = await chatClient.GetResponseAsync<Receipt>(message, options);
 	    
 	    return result.Result;
     }
