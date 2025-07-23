@@ -1,8 +1,5 @@
-using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.AI;
-using ReceiptManager.Api.Converters;
 using ReceiptManager.Api.Models;
 
 namespace ReceiptManager.Api.Services;
@@ -57,8 +54,6 @@ public class ReceiptReaderService(IChatClient chatClient)
     
     public async Task<Results<Ok<Receipt>, InternalServerError>> PersistUploadedFile(IFormFile file)
     {
-	    var fileId = Guid.NewGuid();
-	    
 	    using var memoryStream = new MemoryStream();
 	    await file.CopyToAsync(memoryStream);
 	    
